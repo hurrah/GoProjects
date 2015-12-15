@@ -1,4 +1,0 @@
-Go is a programming language.
-People predict that It will be replaced for C language.
-
-Go is released by Google.

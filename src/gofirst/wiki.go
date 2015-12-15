@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"regexp"
 )
 
@@ -14,20 +15,28 @@ type Page struct {
 	Body  []byte
 }
 
+/*var editView, viewView = getTemplateFilePath()*/
+
 // template file parse ONCE when it init.
-var templates = template.Must(template.ParseFiles("edit.html", "view.html"))
+var editPath, _ = filepath.Abs("./tmpl/edit.html")
+var viewPath, _ = filepath.Abs("./tmpl/view.html")
+
+var templates = template.Must(template.ParseFiles(editPath, viewPath))
 
 // request uri validation
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
 func (p *Page) save() error {
 	filename := p.Title + ".txt"
-	return ioutil.WriteFile(filename, p.Body, 0600)
+	thePath, _ := filepath.Abs("./data/" + filename)
+	return ioutil.WriteFile(thePath, p.Body, 0600)
 }
 
 func loadPage(title string) (*Page, error) {
 	filename := title + ".txt"
-	body, err := ioutil.ReadFile(filename)
+	thePath, _ := filepath.Abs("./data/" + filename)
+
+	body, err := ioutil.ReadFile(thePath)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +120,12 @@ func main() {
 	/*
 		p1 := &Page{Title: "view", Body: []byte("Great Power Takes Greate Responsibility.")}
 		p1.save()
+
+		fmt.Printf(" editPath: %v \n", editPath)
+		fmt.Printf(" viewPath: %v \n", viewPath)
 	*/
+
+	http.Handle("/", http.FileServer(http.Dir(".")))
 
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
